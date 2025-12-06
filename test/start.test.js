@@ -6,10 +6,8 @@ const { once } = require('node:events')
 const fs = require('node:fs')
 const path = require('node:path')
 const crypto = require('node:crypto')
-const semver = require('semver')
 const baseFilename = path.join(__dirname, 'fixtures', `test_${crypto.randomBytes(16).toString('hex')}`)
 const { fork } = require('node:child_process')
-const moduleSupport = semver.satisfies(process.version, '>= 14 || >= 12.17.0 < 13.0.0')
 
 const { test } = require('node:test')
 
@@ -529,26 +527,6 @@ test('should start the server at the given prefix (using env var)', async t => {
   t.assert.ok('server closed')
 })
 
-test('should start the server at the given prefix (using env var read from dotenv)', async t => {
-  t.plan(3)
-
-  const start = proxyquire('../start', {
-    dotenv: {
-      config () {
-        t.assert.ok('config called')
-        process.env.FASTIFY_PORT = 8080
-      }
-    }
-  })
-  const argv = ['./examples/plugin.js']
-  const fastify = await start.start(argv)
-  t.assert.strictEqual(fastify.server.address().port, 8080)
-  delete process.env.FASTIFY_PORT
-
-  t.after(async () => await fastify.close())
-  t.assert.ok('server closed')
-})
-
 test('should start the server listening on 0.0.0.0 when running in docker', async t => {
   t.plan(2)
   const isDocker = sinon.stub()
@@ -973,7 +951,7 @@ test('should throw on async plugin with one argument', async t => {
   await start.start(argv)
 })
 
-test('should start fastify with custom plugin options with a ESM typescript compiled plugin', { skip: !moduleSupport }, async t => {
+test('should start fastify with custom plugin options with a ESM typescript compiled plugin', async t => {
   t.plan(4)
 
   const argv = [
@@ -1003,7 +981,7 @@ test('should start fastify with custom plugin options with a ESM typescript comp
   t.assert.ok('server closed')
 })
 
-test('should start fastify with custom plugin default options with a ESM typescript compiled plugin', { skip: !moduleSupport }, async t => {
+test('should start fastify with custom plugin default options with a ESM typescript compiled plugin', async t => {
   t.plan(4)
 
   const argv = [
@@ -1027,20 +1005,7 @@ test('should start fastify with custom plugin default options with a ESM typescr
   t.assert.ok('server closed')
 })
 
-test('should throw an error when loading ESM typescript compiled plugin and ESM is not supported', { skip: moduleSupport }, async t => {
-  t.plan(1)
-
-  const oldStop = start.stop
-  t.after(() => { start.stop = oldStop })
-  start.stop = function (err) {
-    t.assert.ok(/Your version of node does not support ES modules./.test(err.message), err.message)
-  }
-
-  const argv = ['./examples/ts-plugin-with-custom-options.mjs']
-  await start.start(argv)
-})
-
-test('should start fastify with custom plugin options with a ESM plugin with package.json "type":"module"', { skip: !moduleSupport }, async t => {
+test('should start fastify with custom plugin options with a ESM plugin with package.json "type":"module"', async t => {
   t.plan(4)
 
   const argv = [
@@ -1070,7 +1035,7 @@ test('should start fastify with custom plugin options with a ESM plugin with pac
   t.assert.ok('server closed')
 })
 
-test('should start fastify with custom server options (ignoreTrailingSlash) with a ESM plugin with package.json "type":"module"', { skip: !moduleSupport }, async t => {
+test('should start fastify with custom server options (ignoreTrailingSlash) with a ESM plugin with package.json "type":"module"', async t => {
   t.plan(5)
 
   const argv = [
@@ -1097,7 +1062,7 @@ test('should start fastify with custom server options (ignoreTrailingSlash) with
   t.assert.ok('server closed')
 })
 
-test('should start fastify with custom plugin options with a CJS plugin with package.json "type":"module"', { skip: !moduleSupport }, async t => {
+test('should start fastify with custom plugin options with a CJS plugin with package.json "type":"module"', async t => {
   t.plan(4)
 
   const argv = [
